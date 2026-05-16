@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/plugin/protocol/1.0"
+        id="com.cybersinc.usbstream.plugin"
+        version="1.0.0">
+    <name>CyberSincUsbStream</name>
+    <description>Motor de espelhamento ultra-rápido via USB AOA.</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,screen,fps,gaming,usb,aoa,mirroring</keywords>
+
+    <js-module src="www/CyberSinc.js" name="CyberSinc">
+        <clobbers target="CyberSinc" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="CyberSinc">
+                <param name="android-package" value="com.cybersinc.usbstream.UsbEncoderPlugin"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/UsbEncoderPlugin.java" target-dir="src/com/cybersinc/usbstream" />
+    </platform>
+</plugin>

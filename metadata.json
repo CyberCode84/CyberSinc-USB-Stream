@@ -1,0 +1,8 @@
+{
+  "name": "CyberSinc USB Stream",
+  "description": "Transmissor de ultra-baixa latência (60 FPS) para espelhamento USB em jogos competitivos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

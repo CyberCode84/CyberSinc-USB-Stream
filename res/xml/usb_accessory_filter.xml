@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Define your USB accessory details here. 
+         The TV Box/Receiver must match these. -->
+    <usb-accessory model="MirrorReceiver" manufacturer="USBBridge" version="1.0" />
+</resources>
