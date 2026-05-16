@@ -2,20 +2,33 @@ import React, { useState } from 'react';
 import { Share2, Monitor, Usb, AlertCircle, CheckCircle2, Play, Square, Zap, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Mock service for preview purposes (reflecting real CyberSinc calls)
-const CyberSincMock = {
-  start: (success: () => void, error: (msg: string) => void) => {
-    console.log("CyberSinc start called");
-    setTimeout(() => {
-      // Simulate real environment check
-      success();
-    }, 800);
+// Real service wrapper for CyberSinc
+const CyberSincService = {
+  start: (success: (msg: string) => void, error: (msg: string) => void) => {
+    if (window.CyberSinc) {
+      window.CyberSinc.start(success, error);
+    } else {
+      // Mock for browser preview
+      console.log("CyberSinc start (Mock)");
+      setTimeout(() => success("CyberSinc Ativo (Preview Mode)"), 800);
+    }
   },
-  stop: (success: () => void) => {
-    console.log("CyberSinc stop called");
-    success();
+  stop: (success: (msg: string) => void) => {
+    if (window.CyberSinc) {
+      window.CyberSinc.stop(success, (err: string) => console.error(err));
+    } else {
+      console.log("CyberSinc stop (Mock)");
+      success("Stream Parada");
+    }
   }
 };
+
+declare global {
+  interface Window {
+    CyberSinc: any;
+    cordova: any;
+  }
+}
 
 export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -24,13 +37,13 @@ export default function App() {
 
   const handleToggleStreaming = () => {
     if (isStreaming) {
-      CyberSincMock.stop(() => {
+      CyberSincService.stop(() => {
         setIsStreaming(false);
         setStatus('idle');
       });
     } else {
       setStatus('connecting');
-      CyberSincMock.start(
+      CyberSincService.start(
         () => {
           setIsStreaming(true);
           setStatus('streaming');

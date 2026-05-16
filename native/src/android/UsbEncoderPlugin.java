@@ -49,6 +49,15 @@ public class UsbEncoderPlugin extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        // Ensure managers are initialized here
+        Activity activity = cordova.getActivity();
+        if (projectionManager == null) {
+            projectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        }
+        if (usbManager == null) {
+            usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+        }
+
         if (action.equals("startStreaming")) {
             this.startCallbackContext = callbackContext;
             startScreenCapture();
@@ -62,10 +71,6 @@ public class UsbEncoderPlugin extends CordovaPlugin {
     }
 
     private void startScreenCapture() {
-        Activity activity = cordova.getActivity();
-        projectionManager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
-
         UsbAccessory[] accessories = usbManager.getAccessoryList();
         if (accessories == null || accessories.length == 0) {
             startCallbackContext.error("Erro: Conecte o cabo USB ao receptor (AOA).");
