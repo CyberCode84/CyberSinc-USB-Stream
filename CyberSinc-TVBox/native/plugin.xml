@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/plugin/protocol/1.0"
+        id="com.cybersinc.usbstream.receiver.plugin"
+        version="1.0.0">
+    <name>CyberSincReceiver</name>
+    <description>Motor de recepção ultra-rápido via USB AOA.</description>
+    <license>Apache 2.0</license>
+    <keywords>cordova,screen,receiver,usb,aoa,mirroring</keywords>
+
+    <js-module src="www/CyberSincReceiver.js" name="CyberSincReceiver">
+        <clobbers target="CyberSincReceiver" />
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="CyberSincReceiver">
+                <param name="android-package" value="com.cybersinc.usbstream.receiver.UsbReceiverPlugin"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/UsbReceiverPlugin.java" target-dir="src/com/cybersinc/usbstream/receiver" />
+    </platform>
+</plugin>

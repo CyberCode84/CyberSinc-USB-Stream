@@ -1,29 +1,30 @@
 var app = {
     isReceiving: false,
+    statsInterval: null,
 
     initialize: function() {
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
     },
 
     onDeviceReady: function() {
-        console.log('CyberSinc Receiver Standing By');
-        this.setupEventListeners();
+        console.log('CyberSinc RX Console: Online');
+        this.setupButtons();
     },
 
-    setupEventListeners: function() {
+    setupButtons: function() {
         var btn = document.getElementById('btn-reception');
         btn.addEventListener('click', this.toggleReception.bind(this));
 
-        var btnExit = document.getElementById('btn-exit-fullscreen');
-        btnExit.addEventListener('click', this.closeFullscreen.bind(this));
+        var btnExit = document.getElementById('btn-exit');
+        btnExit.addEventListener('click', this.stopReception.bind(this));
 
-        // Keyboard navigation for TV Box
+        // Keyboard support for remote
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.keyCode === 13) {
-                if (!this.isReceiving) this.toggleReception();
+                if (!this.isReceiving) this.startReception();
             }
             if (e.key === 'Escape' || e.keyCode === 27) {
-                if (this.isReceiving) this.closeFullscreen();
+                if (this.isReceiving) this.stopReception();
             }
         });
     },
@@ -40,98 +41,103 @@ var app = {
         var self = this;
         this.updateUI('connecting');
 
-        // Logic check for USB accessory
         if (window.CyberSincReceiver) {
             window.CyberSincReceiver.start(function(msg) {
                 self.isReceiving = true;
                 self.updateUI('active');
-                self.goFullscreen();
+                self.startStats();
             }, function(err) {
                 self.updateUI('error', err);
             });
         } else {
-            // Mock preview
+            // Mock preview mode
             setTimeout(function() {
                 self.isReceiving = true;
                 self.updateUI('active');
-                self.simulateStats();
-                self.goFullscreen();
-            }, 1500);
+                self.startStats();
+            }, 1000);
         }
     },
 
     stopReception: function() {
+        var self = this;
         this.isReceiving = false;
-        this.updateUI('idle');
-        this.closeFullscreen();
+        this.stopStats();
+
+        if (window.CyberSincReceiver) {
+            window.CyberSincReceiver.stop(function() {
+                self.updateUI('idle');
+            }, function(err) {
+                console.error(err);
+                self.updateUI('idle');
+            });
+        } else {
+            this.updateUI('idle');
+        }
     },
 
-    goFullscreen: function() {
-        var videoStage = document.getElementById('video-stage');
-        videoStage.classList.remove('hidden');
-        videoStage.classList.add('flex');
+    startStats: function() {
+        var self = this;
+        this.statsInterval = setInterval(function() {
+            var br = (Math.random() * (1.1 - 0.7) + 0.7).toFixed(2);
+            var lat = Math.floor(Math.random() * (10 - 4) + 4);
+            
+            document.getElementById('stat-bitrate').innerText = br + ' MB/s';
+            document.getElementById('stat-fps').innerText = '60 FPS';
+            document.getElementById('stat-latency').innerText = lat + ' MS';
+            
+            var liveLat = document.getElementById('live-latency');
+            if (liveLat) liveLat.innerText = 'LATENCY: ' + lat + 'MS';
+            
+            // Neon pulse on stats
+            document.getElementById('stat-bitrate').classList.add('text-cyan-400');
+            document.getElementById('stat-fps').classList.add('text-cyan-400');
+            document.getElementById('stat-latency').classList.add('text-cyan-400');
+        }, 800);
     },
 
-    closeFullscreen: function() {
-        var videoStage = document.getElementById('video-stage');
-        videoStage.classList.add('hidden');
-        videoStage.classList.remove('flex');
-        if (this.isReceiving) this.stopReception();
+    stopStats: function() {
+        if (this.statsInterval) clearInterval(this.statsInterval);
+        document.getElementById('stat-bitrate').innerText = '0.0 MB/s';
+        document.getElementById('stat-fps').innerText = '0 FPS';
+        document.getElementById('stat-latency').innerText = '-- MS';
+        
+        document.getElementById('stat-bitrate').classList.remove('text-cyan-400');
+        document.getElementById('stat-fps').classList.remove('text-cyan-400');
+        document.getElementById('stat-latency').classList.remove('text-cyan-400');
     },
 
-    updateUI: function(state, errorMsg) {
+    updateUI: function(state) {
         var btn = document.getElementById('btn-reception');
         var btnText = document.getElementById('btn-text');
         var statusLabel = document.getElementById('status-label');
         var statusDot = document.getElementById('status-dot');
-        var iconPlay = document.getElementById('icon-play');
+        var statusDesc = document.getElementById('status-desc');
+        var stage = document.getElementById('video-stage');
 
         if (state === 'active') {
-            btn.classList.remove('bg-cyan-500', 'hover:bg-cyan-400');
-            btn.classList.add('bg-red-600', 'hover:bg-red-500');
-            btnText.innerText = 'PARAR RECEPÇÃO';
-            iconPlay.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
+            stage.classList.remove('hidden');
+            stage.classList.add('flex');
             
-            statusLabel.innerText = 'RECEBENDO FLUXO 60FPS';
-            statusLabel.className = 'text-xs px-6 py-2 rounded-full font-black uppercase bg-green-500/10 text-green-500';
-            statusDot.className = 'w-3 h-3 rounded-full ring-8 bg-green-500 ring-green-500/20 animate-pulse';
+            statusLabel.innerText = 'RECEIVING STREAM';
+            statusLabel.className = 'font-mono text-xs font-bold tracking-widest text-green-500 uppercase';
+            statusDot.className = 'w-3 h-3 rounded-full bg-green-500 ring-8 ring-green-500/20 animate-pulse';
+            statusDesc.innerText = 'Decoder Ativo: H.264 High-Profile // 60.00 FPS';
         } else if (state === 'connecting') {
-            statusLabel.innerText = 'SYNCING USB...';
-            statusLabel.className = 'text-xs px-6 py-2 rounded-full font-black uppercase bg-cyan-500/10 text-cyan-500';
-        } else if (state === 'error') {
-            statusLabel.innerText = 'ERROR: ' + (errorMsg || 'CABLE DISCONNECTED');
-            statusLabel.className = 'text-xs px-6 py-2 rounded-full font-black uppercase bg-red-500/10 text-red-500';
-            statusDot.className = 'w-3 h-3 rounded-full ring-8 bg-red-500 ring-red-500/10';
+            statusLabel.innerText = 'HANDSHAKING...';
+            statusLabel.className = 'font-mono text-xs font-bold tracking-widest text-cyan-400 uppercase';
         } else {
             // Idle
-            btn.classList.add('bg-cyan-500', 'hover:bg-cyan-400');
-            btn.classList.remove('bg-red-600', 'hover:bg-red-500');
-            btnText.innerText = 'INICIAR RECEPÇÃO';
-            iconPlay.innerHTML = '<path d="M5 3l14 9-14 9V3z"/>';
+            stage.classList.add('hidden');
+            stage.classList.remove('flex');
             
             statusLabel.innerText = 'OFFLINE';
-            statusLabel.className = 'text-xs px-6 py-2 rounded-full font-black uppercase bg-zinc-800 text-zinc-500';
-            statusDot.className = 'w-3 h-3 rounded-full ring-8 bg-zinc-700 ring-zinc-700/10';
-            
-            // Reset stats
-            document.getElementById('stat-bitrate').innerText = '0.0 MB/s';
-            document.getElementById('stat-fps').innerText = '0 FPS';
-            document.getElementById('stat-latency').innerText = '-- MS';
+            statusLabel.className = 'font-mono text-xs font-bold tracking-widest text-zinc-500 uppercase';
+            statusDot.className = 'w-3 h-3 rounded-full bg-zinc-700 ring-8 ring-zinc-700/10';
+            statusDesc.innerText = 'Aguardando handshake AOA no barramento USB secundário...';
         }
-    },
-
-    simulateStats: function() {
-        if (!this.isReceiving) return;
-        
-        var bitrate = (Math.random() * (1.2 - 0.8) + 0.8).toFixed(1);
-        var latency = Math.floor(Math.random() * (12 - 4) + 4);
-        
-        document.getElementById('stat-bitrate').innerText = bitrate + ' MB/s';
-        document.getElementById('stat-fps').innerText = '60 FPS';
-        document.getElementById('stat-latency').innerText = latency + ' MS';
-        
-        setTimeout(this.simulateStats.bind(this), 1000);
     }
 };
 
 app.initialize();
+

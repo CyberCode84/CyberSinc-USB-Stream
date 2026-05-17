@@ -10,12 +10,15 @@
     <allow-intent href="https://*/*" />
 
     <preference name="Orientation" value="landscape" />
+    <preference name="AndroidTVSupport" value="true" />
+    <preference name="KeepRunning" value="true" />
 
     <platform name="android">
         <preference name="AndroidXEnabled" value="true" />
-        <preference name="KeepRunning" value="true" />
         
         <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-feature android:name="android.software.leanback" android:required="false" />
+            <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
             <uses-permission android:name="android.permission.USB_PERMISSION" />
         </config-file>
@@ -26,5 +29,8 @@
             </intent-filter>
             <meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" android:resource="@xml/usb_accessory_filter" />
         </config-file>
+
+        <!-- Resource mapping for filter -->
+        <resource-file src="res/xml/usb_accessory_filter.xml" target="app/src/main/res/xml/usb_accessory_filter.xml" />
     </platform>
 </widget>
